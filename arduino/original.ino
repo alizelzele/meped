@@ -8,27 +8,6 @@ int da = -12, // Left Front Pivot
     dc = -18, // Right Back Pivot
     dd = 12;  // Right Front Pivot
 
-// servo initial positions + calibration
-int a90 = (90 + da),
-    a120 = (120 + da),
-    a150 = (150 + da),
-    a180 = (180 + da);
-
-int b0 = (0 + db),
-    b30 = (30 + db),
-    b60 = (60 + db),
-    b90 = (90 + db);
-
-int c90 = (90 + dc),
-    c120 = (120 + dc),
-    c150 = (150 + dc),
-    c180 = (180 + dc);
-
-int d0 = (0 + dd),
-    d30 = (30 + dd),
-    d60 = (60 + dd),
-    d90 = (90 + dd);
-
 // start points for servo
 int s11 = 90; // Front Left Pivot Servo
 int s12 = 90; // Front Left Lift Servo
@@ -43,9 +22,6 @@ int spd = 3;  // Speed of walking motion, larger the number, the slower the spee
 int high = 15; // How high the robot is standing
 
 char value;
-char lastValue;
-
-
 
 // Define 8 Servos
 Servo myServo1; // Front Left Pivot Servo
@@ -57,24 +33,15 @@ Servo myServo6; // Back Right Lift Servo
 Servo myServo7; // Front Right Pivot Servo
 Servo myServo8; // Front Right Lift Servo
 
-int s4d = -5;
 //==========================================================================================
 
 //===== Setup ==============================================================================
 
 void setup()
 {
-  // Attach servos to Arduino Pins
-  myServo1.attach(4);
-  myServo2.attach(3);
-  myServo3.attach(5);
-  myServo4.attach(6);
-  myServo5.attach(7);
-  myServo6.attach(8);
-  myServo7.attach(9);
-  myServo8.attach(10);
-
-  Serial.begin(9600);
+  switchMotor(true);
+  center_servos();
+  Serial.begin(115200);
 
 } //setup
 
@@ -82,22 +49,11 @@ void setup()
 
 //== Loop ==================================================================================
 
-void loop()
-{
+void loop() {
+  if (Serial.available() > 0) {
+    value = Serial.read();
 
-  center_servos(); // Center all servos
-
-  while (1 == 1) // Loop forever
-  {
-    if (Serial.available() > 0) // If we have received an IR signal
-    {
-      value = Serial.read();
-
-      if (value == 'r')
-        value = lastValue;
-
-      switch (value)
-      {
+    switch (value) {
       case 'w':
         lastValue = 'w';
         forward();
@@ -170,35 +126,17 @@ void loop()
         Serial.println("motors are on");
         break;
 
-      case '[':
-        s4d --;
-        Serial.print("s4d new value is: ");
-        Serial.println(s4d);
-        break;
-      
-
-      case ']':
-        s4d ++;
-        Serial.print("s4d new value is: ");
-        Serial.println(s4d);
-        break;
-
       case 'i':
         activateMotor();
         break;
-        
-      
 
       default:
         break;
-      }
+    }
 
-      delay(50);       // Pause for 50ms before executing next movement
-
-    } // if irrecv.decode
-  }   //while
-
-} //loop
+    delay(50);       // Pause for 50ms before executing next movement
+  }
+}
 
 void activateMotor() {
   while (Serial.available() < 1) ;
@@ -303,7 +241,7 @@ void wave()
   */
 
   center_servos();
-  myServo4.write(45- s4d);
+  myServo4.write(45);
   myServo6.write(45);
   delay(200);
   myServo8.write(0);
@@ -341,7 +279,7 @@ void bow()
 void lean_left()
 {
   myServo2.write(15);
-  myServo4.write(15- s4d);
+  myServo4.write(15);
   myServo6.write(150);
   myServo8.write(150);
 }
@@ -351,7 +289,7 @@ void lean_left()
 void lean_right()
 {
   myServo2.write(150);
-  myServo4.write(150- s4d);
+  myServo4.write(150);
   myServo6.write(15);
   myServo8.write(15);
 }
@@ -368,8 +306,7 @@ void trim_left()
 
 //== Lean_Right ============================================================================
 
-void trim_right()
-{
+void trim_right() {
   da++; // Left Front Pivot
   db++; // Left Back Pivot
   dc++; // Right Back Pivot
@@ -378,51 +315,24 @@ void trim_right()
 
 //== Forward ===============================================================================
 
-void forward()
-{
-  // calculation of points
-
-  // Left Front Pivot
-  a90 = (90 + da),
-  a120 = (120 + da),
-  a150 = (150 + da),
-  a180 = (180 + da);
-
-  // Left Back Pivot
-  b0 = (0 + db),
-  b30 = (30 + db),
-  b60 = (60 + db),
-  b90 = (90 + db);
-
-  // Right Back Pivot
-  c90 = (90 + dc),
-  c120 = (120 + dc),
-  c150 = (150 + dc),
-  c180 = (180 + dc);
-
-  // Right Front Pivot
-  d0 = (0 + dd),
-  d30 = (30 + dd),
-  d60 = (60 + dd),
-  d90 = (90 + dd);
+void forward() {
 
   // set servo positions and speeds needed to walk forward one step
   // (LFP,  LBP, RBP,  RFP, LFL, LBL, RBL, RFL, S1, S2, S3, S4)
-  srv(a180, b0, c120, d60, 42, 33, 33, 42, 1, 3, 1, 1);
-  srv(a90, b30, c90, d30, 6, 33, 33, 42, 3, 1, 1, 1);
-  srv(a90, b30, c90, d30, 42, 33, 33, 42, 3, 1, 1, 1);
-  srv(a120, b60, c180, d0, 42, 33, 6, 42, 1, 1, 3, 1);
-  srv(a120, b60, c180, d0, 42, 33, 33, 42, 1, 1, 3, 1);
-  srv(a150, b90, c150, d90, 42, 33, 33, 6, 1, 1, 1, 3);
-  srv(a150, b90, c150, d90, 42, 33, 33, 42, 1, 1, 1, 3);
-  srv(a180, b0, c120, d60, 42, 6, 33, 42, 1, 3, 1, 1);
-  //srv(a180, b0,  c120, d60, 42,  15,  33,  42,  1,  3,  1,  1);
+  srv(180 + da, 0 + db, 120 + dc, 60 + dd, 42, 33, 33, 42, 1, 3, 1, 1);
+  srv(90 + da, 30 + db, 90 + dc, 30 + dd, 6, 33, 33, 42, 3, 1, 1, 1);
+  srv(90 + da, 30 + db, 90 + dc, 30 + dd, 42, 33, 33, 42, 3, 1, 1, 1);
+  srv(120 + da, 60 + db, 180 + dc, 0 + dd, 42, 33, 6, 42, 1, 1, 3, 1);
+  srv(120 + da, 60 + db, 180 + dc, 0 + dd, 42, 33, 33, 42, 1, 1, 3, 1);
+  srv(150 + da, 90 + db, 150 + dc, 90 + dd, 42, 33, 33, 6, 1, 1, 1, 3);
+  srv(150 + da, 90 + db, 150 + dc, 90 + dd, 42, 33, 33, 42, 1, 1, 1, 3);
+  srv(180 + da, 0 + db, 120 + dc, 60 + dd, 42, 6, 33, 42, 1, 3, 1, 1);
+  //srv(180 + da, 0 + db,  120 + dc, 60 + dd, 42,  15,  33,  42,  1,  3,  1,  1);
 }
 
 //== Back ==================================================================================
 
-void back()
-{
+void back() {
   // set servo positions and speeds needed to walk backward one step
   // (LFP,  LBP, RBP,  RFP, LFL, LBL, RBL, RFL, S1, S2, S3, S4)
   srv(180, 0, 120, 60, 42, 33, 33, 42, 3, 1, 1, 1);
@@ -437,8 +347,7 @@ void back()
 
 //== Left =================================================================================
 
-void turn_left()
-{
+void turn_left() {
   // set servo positions and speeds needed to turn left one step
   // (LFP,  LBP, RBP,  RFP, LFL, LBL, RBL, RFL, S1, S2, S3, S4)
   srv(150, 90, 90, 30, 42, 6, 33, 42, 1, 3, 1, 1);
@@ -453,8 +362,7 @@ void turn_left()
 
 //== Right ================================================================================
 
-void turn_right()
-{
+void turn_right() {
   // set servo positions and speeds needed to turn right one step
   // (LFP,  LBP, RBP,  RFP, LFL, LBL, RBL, RFL, S1, S2, S3, S4)
   srv(90, 30, 150, 90, 6, 33, 33, 42, 3, 1, 1, 1);
@@ -469,12 +377,11 @@ void turn_right()
 
 //== Center Servos ========================================================================
 
-void center_servos()
-{
+void center_servos() {
   myServo1.write(90);
   myServo2.write(90);
   myServo3.write(90);
-  myServo4.write(90- s4d);
+  myServo4.write(90);
   myServo5.write(90);
   myServo6.write(90);
   myServo7.write(90);
@@ -677,11 +584,11 @@ void srv(int p11, int p21, int p31, int p41, int p12, int p22, int p32, int p42,
 
     // Write Lift Servos Values
     myServo2.write(s12);
-    myServo4.write(s22- s4d);
+    myServo4.write(s22);
     myServo6.write(s32);
     myServo8.write(s42);
 
     delay(spd); // Delay before next movement
 
-  } //while
-} //srv
+  }
+}
